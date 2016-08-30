@@ -9,10 +9,15 @@ import (
 
 func Get(base interface{}, key string) (interface{}, error) {
 	keyParts := strings.Split(key, ".")
-	return GetParts(base, keyParts)
+	val, err := GetParts(base, keyParts)
+	if err != nil {
+		return nil, err
+	} else {
+		return val.Interface(), nil
+	}
 }
 
-func GetParts(base interface{}, keyParts []string) (interface{}, error) {
+func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
 	var currVal reflect.Value
 	currVal = reflect.ValueOf(base)
 
@@ -48,5 +53,5 @@ func GetParts(base interface{}, keyParts []string) (interface{}, error) {
 			return nil, fmt.Errorf("unable to find %v in %v %v: %v", keyPart, currVal, currVal.Kind(), subval)
 		}
 	}
-	return currVal.Interface(), nil
+	return &currVal, nil
 }

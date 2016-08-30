@@ -21,7 +21,7 @@ func SetParts(base interface{}, keyParts []string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	objR := reflect.Indirect(reflect.ValueOf(obj))
+	objR := *obj
 	// This for loop is only for pointers-- so we don't have to duplicate the code all over
 	for {
 		val := reflect.ValueOf(v)
