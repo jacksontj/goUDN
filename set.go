@@ -21,30 +21,27 @@ func SetParts(base interface{}, keyParts []string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	objR := reflect.ValueOf(obj)
+	objR := reflect.Indirect(reflect.ValueOf(obj))
 	// This for loop is only for pointers-- so we don't have to duplicate the code all over
 	for {
 		val := reflect.ValueOf(v)
 		switch objR.Kind() {
 		case reflect.Array:
-			return fmt.Errorf("Arrays aren't supported")
-			/*
-				// Seem to only get errors like:
-				//		reflect.Value.Set using unaddressable value [recovered]
-				//	something to do with the array not having the values directly-- basically
-				// the index isn't `CanSet()`
-				idx, err := strconv.Atoi(lastKey)
-				if err != nil {
-					return fmt.Errorf("Accessing an array with a non-int key: %v", lastKey)
-				}
-				if idx >= objR.Len() {
-					return fmt.Errorf("array isn't large enough")
-				} else {
-					logrus.Infof("val=%v idx=%v", val, objR.Index(idx))
-					logrus.Infof("settability of objR=%v index=%v", objR.CanSet(), objR.Index(idx).CanSet())
+			idx, err := strconv.Atoi(lastKey)
+			if err != nil {
+				return fmt.Errorf("Accessing an array with a non-int key: %v", lastKey)
+			}
+			if idx >= objR.Len() {
+				return fmt.Errorf("array isn't large enough")
+			} else {
+				entry := objR.Index(idx)
+				if entry.CanSet() {
 					objR.Index(idx).Set(val)
+				} else {
+					// TODO: this
+					return fmt.Errorf("Unable to set %v to %v in array %v", lastKey, val, entry)
 				}
-			*/
+			}
 		case reflect.Slice:
 			idx, err := strconv.Atoi(lastKey)
 			if err != nil {
@@ -58,6 +55,7 @@ func SetParts(base interface{}, keyParts []string, v interface{}) error {
 				if entry.CanSet() {
 					objR.Index(idx).Set(val)
 				} else {
+					// TODO: this
 					return fmt.Errorf("Unable to set %v to %v in slice %v", lastKey, val, entry)
 				}
 			}
@@ -72,6 +70,7 @@ func SetParts(base interface{}, keyParts []string, v interface{}) error {
 			if field.CanSet() {
 				field.Set(val)
 			} else {
+				// TODO: this
 				return fmt.Errorf("Unable to set %v to %v in struct %v", lastKey, val, objR)
 			}
 		default:

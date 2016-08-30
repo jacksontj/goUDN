@@ -3,6 +3,11 @@ package udn
 import "testing"
 
 /*
+// Seem to only get errors like:
+//		reflect.Value.Set using unaddressable value [recovered]
+//	something to do with the array not having the values directly-- basically
+// the index isn't `CanSet()`
+
 func TestSimpleArraySet(t *testing.T) {
 	var obj [2][3]string
 	obj[0][0] = "a"
