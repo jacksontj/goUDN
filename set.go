@@ -13,15 +13,6 @@ func Set(base interface{}, key string, val interface{}) error {
 }
 
 func SetParts(base interface{}, keyParts []string, v interface{}) error {
-	baseObj := reflect.ValueOf(base)
-
-	// We can only do our thing on the set side if things are passed-by-reference
-	switch baseObj.Kind() {
-	case reflect.Struct:
-		fallthrough
-	case reflect.Array:
-		return fmt.Errorf("Only support setting bases passed by reference")
-	}
 	keyPrefix := keyParts[:len(keyParts)-1]
 	lastKey := keyParts[len(keyParts)-1]
 	obj, err := GetParts(base, keyPrefix)
@@ -46,7 +37,7 @@ func SetParts(base interface{}, keyParts []string, v interface{}) error {
 					objR.Index(idx).Set(val)
 				} else {
 					// TODO: this
-					return fmt.Errorf("Unable to set %v to %v in array %v", lastKey, val, entry)
+					return fmt.Errorf("Unable to set %v to %v in array %v, usually means the `base` was passed-by-value", lastKey, val, entry)
 				}
 			}
 		case reflect.Slice:
@@ -63,7 +54,7 @@ func SetParts(base interface{}, keyParts []string, v interface{}) error {
 					objR.Index(idx).Set(val)
 				} else {
 					// TODO: this
-					return fmt.Errorf("Unable to set %v to %v in slice %v", lastKey, val, entry)
+					return fmt.Errorf("Unable to set %v to %v in slice %v, usually means the `base` was passed-by-value", lastKey, val, entry)
 				}
 			}
 		case reflect.Map:
@@ -78,7 +69,7 @@ func SetParts(base interface{}, keyParts []string, v interface{}) error {
 				field.Set(val)
 			} else {
 				// TODO: this
-				return fmt.Errorf("Unable to set %v to %v in struct %v", lastKey, val, objR)
+				return fmt.Errorf("Unable to set %v to %v in struct %v, usually means the `base` was passed-by-value", lastKey, val, objR)
 			}
 		default:
 			return fmt.Errorf("Unable to Get() past %v %v", objR, objR.Kind())

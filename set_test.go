@@ -89,6 +89,23 @@ func TestSimpleStructSet(t *testing.T) {
 	testGet(t, s, "nothere", nil, true)
 }
 
+func TestFoo(t *testing.T) {
+	type Inner struct {
+		Val string
+	}
+	type Outer struct {
+		Child *Inner
+	}
+
+	s := Outer{&Inner{"value"}}
+
+	err := Set(s, "Child.Val", "bar")
+	if err != nil {
+		t.Errorf("Unable to set: %v", err)
+	}
+	testGet(t, s, "Child.Val", "bar", false)
+}
+
 func TestSimpleStructPtrSet(t *testing.T) {
 	type Inner struct {
 		Val string
