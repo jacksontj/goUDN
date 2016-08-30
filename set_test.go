@@ -2,19 +2,6 @@ package udn
 
 import "testing"
 
-func TestSimpleMapSet(t *testing.T) {
-	m := map[string]map[string]string{
-		"foo": map[string]string{"bar": "baz"},
-	}
-
-	err := Set(m, "foo.qux", "bar")
-	if err != nil {
-		t.Errorf("Unable to set: %v", err)
-	}
-
-	testGet(t, m, "foo.qux", "bar", false)
-}
-
 /*
 func TestSimpleArraySet(t *testing.T) {
 	var obj [2][3]string
@@ -53,5 +40,75 @@ func TestSimpleSliceSet(t *testing.T) {
 		t.Errorf("Unable to set: %v", err)
 	}
 	testGet(t, obj, "0.4", "qux", false)
+}
 
+func TestSimpleMapSet(t *testing.T) {
+	m := map[string]map[string]string{
+		"foo": map[string]string{"bar": "baz"},
+	}
+
+	err := Set(m, "foo.qux", "bar")
+	if err != nil {
+		t.Errorf("Unable to set: %v", err)
+	}
+
+	testGet(t, m, "foo.qux", "bar", false)
+}
+
+/*
+
+TODO: finish, errors like:
+
+	panic: reflect: reflect.Value.Set using unaddressable value [recovered]
+
+This has to do with copying structs where necessary and re-setting
+
+
+func TestSimpleStructSet(t *testing.T) {
+	type Inner struct {
+		Val string
+	}
+	type Outer struct {
+		Child Inner
+	}
+
+	s := Outer{}
+	inner := Inner{"value"}
+	err := Set(s, "Child", inner)
+	if err != nil {
+		t.Errorf("Unable to set: %v", err)
+	}
+
+	// Test the ones that are there
+	testGet(t, s, "Child.Val", "value", false)
+	// TODO: figure out how to compare these...
+	testGet(t, s, "Child", s.Child, false)
+
+	// test some missing ones
+	testGet(t, s, "nothere", nil, true)
+}
+*/
+
+func TestSimpleStructPtrSet(t *testing.T) {
+	type Inner struct {
+		Val string
+	}
+	type Outer struct {
+		Child Inner
+	}
+
+	s := &Outer{}
+	inner := Inner{"value"}
+
+	err := Set(s, "Child", inner)
+	if err != nil {
+		t.Errorf("Unable to set: %v", err)
+	}
+	// Test the ones that are there
+	testGet(t, s, "Child.Val", "value", false)
+	// TODO: figure out how to compare these...
+	testGet(t, s, "Child", s.Child, false)
+
+	// test some missing ones
+	testGet(t, s, "nothere", nil, true)
 }
