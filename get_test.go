@@ -75,6 +75,21 @@ func TestSimpleStructPtrGet(t *testing.T) {
 }
 
 func TestSimpleArrayGet(t *testing.T) {
+	var obj [2][3]string
+	obj[0] = [3]string{"a", "b", "c"}
+	obj[1] = [3]string{"1", "2", "3"}
+
+	// Test the ones that are there
+	for topI, stringSlice := range obj {
+		for innerI, val := range stringSlice {
+			testGet(t, obj, fmt.Sprintf("%d.%d", topI, innerI), val, false)
+		}
+	}
+	// test some missing ones
+	testGet(t, obj, "nothere", nil, true)
+}
+
+func TestSimpleSliceGet(t *testing.T) {
 	obj := [][]string{}
 	obj = append(obj, []string{"a", "b", "c"})
 	obj = append(obj, []string{"1", "2", "3"})

@@ -23,6 +23,7 @@ func GetParts(base interface{}, keyParts []string) (interface{}, error) {
 		var subval reflect.Value
 		switch currVal.Kind() {
 		case reflect.Array:
+			fallthrough
 		case reflect.Slice:
 			idx, err := strconv.Atoi(keyPart)
 			if err != nil {
@@ -32,7 +33,6 @@ func GetParts(base interface{}, keyParts []string) (interface{}, error) {
 		case reflect.Map:
 			subval = currVal.MapIndex(reflect.ValueOf(keyPart))
 		// if we are a pointer of some kind-- lets dereference the pointer and continue on
-		case reflect.Interface:
 		case reflect.Ptr:
 			currVal = currVal.Elem()
 			continue
@@ -45,7 +45,7 @@ func GetParts(base interface{}, keyParts []string) (interface{}, error) {
 			currVal = subval
 			x++
 		} else {
-			return nil, fmt.Errorf("unable to find %v in %v", keyPart, currVal)
+			return nil, fmt.Errorf("unable to find %v in %v %v: %v", keyPart, currVal, currVal.Kind(), subval)
 		}
 	}
 	return currVal.Interface(), nil
