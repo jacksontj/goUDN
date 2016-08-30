@@ -7,14 +7,21 @@ import (
 	"strings"
 )
 
-// TODO: finish these
-// The set stuff is not functional yet
 func Set(base interface{}, key string, val interface{}) error {
 	keyParts := strings.Split(key, ".")
 	return SetParts(base, keyParts, val)
 }
 
 func SetParts(base interface{}, keyParts []string, v interface{}) error {
+	baseObj := reflect.ValueOf(base)
+
+	// We can only do our thing on the set side if things are passed-by-reference
+	switch baseObj.Kind() {
+	case reflect.Struct:
+		fallthrough
+	case reflect.Array:
+		return fmt.Errorf("Only support setting bases passed by reference")
+	}
 	keyPrefix := keyParts[:len(keyParts)-1]
 	lastKey := keyParts[len(keyParts)-1]
 	obj, err := GetParts(base, keyPrefix)

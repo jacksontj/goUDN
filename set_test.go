@@ -2,12 +2,6 @@ package udn
 
 import "testing"
 
-/*
-// Seem to only get errors like:
-//		reflect.Value.Set using unaddressable value [recovered]
-//	something to do with the array not having the values directly-- basically
-// the index isn't `CanSet()`
-
 func TestSimpleArraySet(t *testing.T) {
 	var obj [2][3]string
 	obj[0][0] = "a"
@@ -15,13 +9,19 @@ func TestSimpleArraySet(t *testing.T) {
 	obj[0][2] = "c"
 	obj[1] = [3]string{"1", "2", "3"}
 
+	// make sure that pass-by-value errors out
 	err := Set(obj, "0.2", "bar")
+	if err == nil {
+		t.Errorf("No error when passing-by-value!")
+	}
+
+	// ensure that pass-by-value works
+	err = Set(&obj, "0.2", "bar")
 	if err != nil {
 		t.Errorf("Unable to set: %v", err)
 	}
 	testGet(t, obj, "0.2", "bar", false)
 }
-*/
 
 func TestSimpleSliceSet(t *testing.T) {
 	obj := [][]string{}
@@ -60,15 +60,6 @@ func TestSimpleMapSet(t *testing.T) {
 	testGet(t, m, "foo.qux", "bar", false)
 }
 
-/*
-
-TODO: finish, errors like:
-
-	panic: reflect: reflect.Value.Set using unaddressable value [recovered]
-
-This has to do with copying structs where necessary and re-setting
-
-
 func TestSimpleStructSet(t *testing.T) {
 	type Inner struct {
 		Val string
@@ -80,6 +71,11 @@ func TestSimpleStructSet(t *testing.T) {
 	s := Outer{}
 	inner := Inner{"value"}
 	err := Set(s, "Child", inner)
+	if err == nil {
+		t.Errorf("No error when pass-by-value")
+	}
+
+	err = Set(&s, "Child", inner)
 	if err != nil {
 		t.Errorf("Unable to set: %v", err)
 	}
@@ -92,7 +88,6 @@ func TestSimpleStructSet(t *testing.T) {
 	// test some missing ones
 	testGet(t, s, "nothere", nil, true)
 }
-*/
 
 func TestSimpleStructPtrSet(t *testing.T) {
 	type Inner struct {
