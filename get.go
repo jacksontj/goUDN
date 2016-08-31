@@ -21,11 +21,11 @@ func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
 	var currVal reflect.Value
 	currVal = reflect.ValueOf(base)
 
+	var subval reflect.Value
 	// Since some layers might be pointers, we won't range over the keyParts
 	// this way the pointer types can just dereference then continue
 	for x := 0; x < len(keyParts); {
 		keyPart := keyParts[x]
-		var subval reflect.Value
 		switch currVal.Kind() {
 		case reflect.Array:
 			fallthrough
