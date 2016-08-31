@@ -129,3 +129,89 @@ func TestSimpleStructPtrSet(t *testing.T) {
 	// test some missing ones
 	testGet(t, s, "nothere", nil, true)
 }
+
+// Target for benchmarking-- note we don't verify the return here, as we assume
+// that the tests cover that
+func benchmarkUDNSet(b *testing.B, base interface{}, key string, val interface{}) {
+	for n := 0; n < b.N; n++ {
+		Set(base, key, val)
+	}
+}
+
+func BenchmarkMapSetUDN(b *testing.B) {
+	m := map[string]map[string]string{
+		"foo": map[string]string{"bar": "baz"},
+	}
+	benchmarkUDNSet(b, m, "foo.bar", "somethingelse")
+}
+
+func BenchmarkMapSet(b *testing.B) {
+	m := map[string]map[string]string{
+		"foo": map[string]string{"bar": "baz"},
+	}
+	for n := 0; n < b.N; n++ {
+		m["foo"]["bar"] = "somethingelse"
+	}
+}
+
+func BenchmarkStructSetUDN(b *testing.B) {
+	type Inner struct {
+		Val string
+	}
+	type Outer struct {
+		Child Inner
+	}
+
+	s := Outer{Inner{"value"}}
+	benchmarkUDNSet(b, s, "Child.Val", "somethingelse")
+}
+
+func BenchmarkStructSet(b *testing.B) {
+	type Inner struct {
+		Val string
+	}
+	type Outer struct {
+		Child Inner
+	}
+
+	s := Outer{Inner{"value"}}
+	for n := 0; n < b.N; n++ {
+		s.Child.Val = "somethingelse"
+	}
+}
+
+func BenchmarkArraySetUDN(b *testing.B) {
+	var obj [2][3]string
+	obj[0] = [3]string{"a", "b", "c"}
+	obj[1] = [3]string{"1", "2", "3"}
+
+	benchmarkUDNSet(b, obj, "0.1", "somethingelse")
+}
+
+func BenchmarkArraySet(b *testing.B) {
+	var obj [2][3]string
+	obj[0] = [3]string{"a", "b", "c"}
+	obj[1] = [3]string{"1", "2", "3"}
+
+	for n := 0; n < b.N; n++ {
+		obj[0][1] = "somethingelse"
+	}
+}
+
+func BenchmarkSliceSetUDN(b *testing.B) {
+	obj := [][]string{}
+	obj = append(obj, []string{"a", "b", "c"})
+	obj = append(obj, []string{"1", "2", "3"})
+
+	benchmarkUDNSet(b, obj, "0.1", "somethingelse")
+}
+
+func BenchmarkSliceSet(b *testing.B) {
+	obj := [][]string{}
+	obj = append(obj, []string{"a", "b", "c"})
+	obj = append(obj, []string{"1", "2", "3"})
+
+	for n := 0; n < b.N; n++ {
+		obj[0][1] = "somethingelse"
+	}
+}

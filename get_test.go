@@ -104,3 +104,101 @@ func TestSimpleSliceGet(t *testing.T) {
 	// test some missing ones
 	testGet(t, obj, "nothere", nil, true)
 }
+
+// Target for benchmarking-- note we don't verify the return here, as we assume
+// that the tests cover that
+var r interface{}
+
+func benchmarkUDNGet(b *testing.B, base interface{}, key string) {
+	var ret interface{}
+	for n := 0; n < b.N; n++ {
+		ret, _ = Get(base, key)
+	}
+	r = ret
+}
+
+func BenchmarkMapGetUDN(b *testing.B) {
+	m := map[string]map[string]string{
+		"foo": map[string]string{"bar": "baz"},
+	}
+	benchmarkUDNGet(b, m, "foo.bar")
+}
+
+func BenchmarkMapGet(b *testing.B) {
+	m := map[string]map[string]string{
+		"foo": map[string]string{"bar": "baz"},
+	}
+	var ret string
+	for n := 0; n < b.N; n++ {
+		ret, _ = m["foo"]["bar"]
+	}
+	r = ret
+}
+
+func BenchmarkStructGetUDN(b *testing.B) {
+	type Inner struct {
+		Val string
+	}
+	type Outer struct {
+		Child Inner
+	}
+
+	s := Outer{Inner{"value"}}
+	benchmarkUDNGet(b, s, "Child.Val")
+}
+
+func BenchmarkStructGet(b *testing.B) {
+	type Inner struct {
+		Val string
+	}
+	type Outer struct {
+		Child Inner
+	}
+
+	s := Outer{Inner{"value"}}
+	var ret string
+	for n := 0; n < b.N; n++ {
+		ret = s.Child.Val
+	}
+	r = ret
+}
+
+func BenchmarkArrayGetUDN(b *testing.B) {
+	var obj [2][3]string
+	obj[0] = [3]string{"a", "b", "c"}
+	obj[1] = [3]string{"1", "2", "3"}
+
+	benchmarkUDNGet(b, obj, "0.1")
+}
+
+func BenchmarkArrayGet(b *testing.B) {
+	var obj [2][3]string
+	obj[0] = [3]string{"a", "b", "c"}
+	obj[1] = [3]string{"1", "2", "3"}
+
+	var ret string
+	for n := 0; n < b.N; n++ {
+		ret = obj[0][1]
+	}
+	r = ret
+}
+
+func BenchmarkSliceGetUDN(b *testing.B) {
+	obj := [][]string{}
+	obj = append(obj, []string{"a", "b", "c"})
+	obj = append(obj, []string{"1", "2", "3"})
+
+	benchmarkUDNGet(b, obj, "0.1")
+}
+
+func BenchmarkSliceGet(b *testing.B) {
+	obj := [][]string{}
+	obj = append(obj, []string{"a", "b", "c"})
+	obj = append(obj, []string{"1", "2", "3"})
+
+	var ret string
+	for n := 0; n < b.N; n++ {
+		ret = obj[0][1]
+	}
+	r = ret
+}
