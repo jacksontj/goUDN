@@ -144,7 +144,7 @@ func BenchmarkStructGetUDN(b *testing.B) {
 	}
 
 	s := Outer{Inner{"value"}}
-	benchmarkUDNGet(b, s, "Child.Val")
+	benchmarkUDNGet(b, &s, "Child.Val")
 }
 
 func BenchmarkStructGet(b *testing.B) {
