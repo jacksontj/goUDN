@@ -15,8 +15,12 @@ func Set(base interface{}, key string, val interface{}) error {
 func SetParts(base interface{}, keyParts []string, v interface{}) error {
 	keyPrefix := keyParts[:len(keyParts)-1]
 	lastKey := keyParts[len(keyParts)-1]
-	obj, err := GetParts(base, keyPrefix)
+	obj, done, err := getSetParts(base, keyPrefix, v, true)
 	if err != nil {
+		return err
+	}
+	// if the setter stuff already did it-- we are all clear
+	if done {
 		return err
 	}
 	objR := *obj

@@ -9,7 +9,7 @@ import (
 
 func Get(base interface{}, key string) (interface{}, error) {
 	keyParts := strings.Split(key, ".")
-	val, err := GetParts(base, keyParts)
+	val, _, err := getSetParts(base, keyParts, nil, false)
 	if err != nil {
 		return nil, err
 	} else {
@@ -17,9 +17,7 @@ func Get(base interface{}, key string) (interface{}, error) {
 	}
 }
 
-func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
-	getInterface := reflect.TypeOf((*UDNGetter)(nil)).Elem()
-
+func getSetParts(base interface{}, keyParts []string, val interface{}, set bool) (*reflect.Value, bool, error) {
 	var currVal reflect.Value
 	currVal = reflect.ValueOf(base)
 
@@ -27,6 +25,15 @@ func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
 	// Since some layers might be pointers, we won't range over the keyParts
 	// this way the pointer types can just dereference then continue
 	for x := 0; x < len(keyParts); {
+		// check to see if this layer implements the setter interface
+		if set && currVal.Type().Implements(setInterface) {
+			tmp := currVal.Interface().(UDNSetter)
+			err := tmp.SetUDN(keyParts[x:], val)
+			if err == nil {
+				return nil, true, nil
+			}
+		}
+
 		// check to see if this layer implements the getter
 		// if so, call that interface-- then continue on
 		if currVal.Type().Implements(getInterface) {
@@ -46,7 +53,7 @@ func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
 		case reflect.Slice:
 			idx, err := strconv.Atoi(keyPart)
 			if err != nil {
-				return nil, fmt.Errorf("Accessing an array/slice with a non-int key: %v", keyPart)
+				return nil, false, fmt.Errorf("Accessing an array/slice with a non-int key: %v", keyPart)
 			}
 			subval = currVal.Index(idx)
 		case reflect.Map:
@@ -58,14 +65,14 @@ func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
 		case reflect.Struct:
 			subval = currVal.FieldByName(keyPart)
 		default:
-			return nil, fmt.Errorf("Unable to Get() past %v %v", currVal, currVal.Kind())
+			return nil, false, fmt.Errorf("Unable to Get() past %v %v", currVal, currVal.Kind())
 		}
 		if subval.IsValid() {
 			currVal = subval
 			x++
 		} else {
-			return nil, fmt.Errorf("unable to find %v in %v %v: %v", keyPart, currVal, currVal.Kind(), subval)
+			return nil, false, fmt.Errorf("unable to find %v in %v %v: %v", keyPart, currVal, currVal.Kind(), subval)
 		}
 	}
-	return &currVal, nil
+	return &currVal, false, nil
 }
