@@ -18,6 +18,8 @@ func Get(base interface{}, key string) (interface{}, error) {
 }
 
 func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
+	getInterface := reflect.TypeOf((*UDNGetter)(nil)).Elem()
+
 	var currVal reflect.Value
 	currVal = reflect.ValueOf(base)
 
@@ -25,6 +27,18 @@ func GetParts(base interface{}, keyParts []string) (*reflect.Value, error) {
 	// Since some layers might be pointers, we won't range over the keyParts
 	// this way the pointer types can just dereference then continue
 	for x := 0; x < len(keyParts); {
+		// check to see if this layer implements the getter
+		// if so, call that interface-- then continue on
+		if currVal.Type().Implements(getInterface) {
+			tmp := currVal.Interface().(UDNGetter)
+			tmpVal, incrX, err := tmp.GetUDN(keyParts[x:])
+			if err == nil {
+				x = x + incrX
+				currVal = reflect.ValueOf(tmpVal)
+				continue
+			}
+		}
+
 		keyPart := keyParts[x]
 		switch currVal.Kind() {
 		case reflect.Array:
